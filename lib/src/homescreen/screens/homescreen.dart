@@ -46,6 +46,11 @@ class _HomescreenState extends State<Homescreen> {
             subtitle: Text(landmark.description),
             leading: CircleAvatar(child: Text(landmark.id)),
             trailing: Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(
+                context,
+              ).pushNamed('/details', arguments: landmark.id);
+            },
           );
         },
       ),
