@@ -14,8 +14,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // We retrieve the landmark ID from the route arguments in [didChangeDependencies]
+    // because [initState] is too early in the lifecycle to access [ModalRoute].
+    // Usually this is safe because route arguments typically don't change
+    // during the lifetime of the screen.
     final landmarkId = ModalRoute.of(context)!.settings.arguments as String;
-    widget.detailsViewModel.loadLandmark(landmarkId);
+    widget.detailsViewModel.onLoadLandmark(landmarkId);
   }
 
   @override
@@ -26,11 +30,15 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // We use [ListenableBuilder] to rebuild the UI when the ViewModel notifies listeners
+    // when the method [notifyListeners] is called.
     return ListenableBuilder(
       listenable: widget.detailsViewModel,
       builder: (innerContext, child) {
         final state = widget.detailsViewModel.detailsScreenState;
 
+        // Conditional rendering based on whether the state is loaded or not
+        // (is/is not `null`)
         if (state == null) {
           return Scaffold(
             appBar: AppBar(

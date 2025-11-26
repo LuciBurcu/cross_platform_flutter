@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+/// Domain model representing a landmark.
 class Landmark extends Equatable {
   const Landmark({
     required this.id,

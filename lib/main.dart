@@ -4,8 +4,14 @@ import 'package:cross_platform_flutter/src/homescreen/repository/landmark_reposi
 import 'package:cross_platform_flutter/src/homescreen/screens/homescreen.dart';
 import 'package:flutter/material.dart';
 
+/// Main entry point of the application
 void main() {
+  // Initiate dependencies in the main app.
+  // NOTE: In a real app, you might want to use a Dependency Injection framework
+  // or at least a more complex setup for managing dependencies.
   final landmarkRepository = LandmarkRepository();
+  // ViewModels ideally should be created per screen lifecycle rather than standalone
+  // instances, but for simplicity, we create it here.
   final detailsViewModel = DetailsViewModel(
     landmarkRepository: landmarkRepository,
   );
@@ -34,7 +40,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
       ),
+      // Required to set the initial screen when using `routes` approach
       initialRoute: '/home',
+      // By using named `routes`, we map a screen to an identifier
       routes: {
         '/home': (context) =>
             Homescreen(landmarkRepository: landmarkRepository),
