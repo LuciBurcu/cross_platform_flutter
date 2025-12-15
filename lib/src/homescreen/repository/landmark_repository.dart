@@ -1,55 +1,58 @@
+import 'package:cross_platform_flutter/src/homescreen/datasources/db/landmark_local_db.dart';
 import 'package:cross_platform_flutter/src/homescreen/models/landmark.dart';
 
 class LandmarkRepository {
-  final List<Landmark> _landmarks = [
-    const Landmark(
-      id: '1',
-      name: 'Great Wall of China',
-      description: 'This is in China',
-    ),
-    const Landmark(
-      id: '2',
-      name: 'Eiffel Tower',
-      description: 'This is in France',
-    ),
-    const Landmark(id: '3', name: 'Colosseum', description: 'This is in Italy'),
-  ];
+  LandmarkRepository({required this.landmarkDatabase});
 
-  // R
+  final LandmarkDatabase landmarkDatabase;
 
-  List<Landmark> getLandmarks() {
-    return _landmarks;
+  // Read
+  Future<List<Landmark>> getLandmarks() async {
+    final localLandmarks = await landmarkDatabase.managers.landmarkLocal.get();
+    return localLandmarks
+        .map(
+          (localItem) => Landmark(
+            id: localItem.id.toString(),
+            name: localItem.name,
+            description: localItem.description,
+          ),
+        )
+        .toList();
   }
 
+  /// Retrieves a landmark by its [id].
+  /// Throws [UnimplementedError] if not implemented. You can implement based on your needs
   Landmark getLandmarkById(String id) {
-    return _landmarks.firstWhere((landmark) => landmark.id == id);
+    throw UnimplementedError();
   }
 
-  Landmark createLandmark(String name, String description) {
-    final newLandmark = Landmark(
-      id: (_landmarks.length + 1).toString(),
-      name: name,
-      description: description,
+  // Create
+  Future<Landmark> createLandmark(String name, String description) async {
+    final newId = await landmarkDatabase.managers.landmarkLocal.create(
+      (row) => row(name: name, description: description),
     );
-    _landmarks.add(newLandmark);
-    return newLandmark;
+    final landmarkLocal = await landmarkDatabase.managers.landmarkLocal
+        .filter((f) => f.id(newId))
+        .getSingle();
+    return Landmark(
+      id: landmarkLocal.id.toString(),
+      name: landmarkLocal.name,
+      description: landmarkLocal.description,
+    );
   }
 
+  // Update
+  /// Updates a landmark by its [id] with the new [name] and [description].
+  /// Returns the updated [Landmark].
+  /// Throws [UnimplementedError] if not implemented. You can implement based on your needs.
   Landmark updateLandmark(String id, String name, String description) {
-    final index = _landmarks.indexWhere((landmark) => landmark.id == id);
-    if (index != -1) {
-      final updatedLandmark = Landmark(
-        id: id,
-        name: name,
-        description: description,
-      );
-      _landmarks[index] = updatedLandmark;
-      return updatedLandmark;
-    }
-    throw Exception('Landmark not found');
+    throw UnimplementedError();
   }
 
+  // Delete
+  /// Deletes a landmark by its [id].
+  /// Throws [UnimplementedError] if not implemented. You can implement based on your needs.
   void deleteLandmark(String id) {
-    _landmarks.removeWhere((landmark) => landmark.id == id);
+    throw UnimplementedError();
   }
 }
