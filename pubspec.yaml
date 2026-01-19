@@ -11,12 +11,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # State management & DI
+  provider: ^6.1.5+1
   # Utils
   equatable: ^2.0.7
   # Local db
   drift: ^2.30.0
   drift_flutter: ^0.2.8
   path_provider: ^2.1.5
+  # Network
+  http: ^1.6.0
 
 # Dev dependencies are not included in the final build. They are only used as helpers for development.
 dev_dependencies:

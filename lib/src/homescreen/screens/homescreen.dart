@@ -1,37 +1,33 @@
 import 'package:cross_platform_flutter/src/homescreen/viewmodel/homescreen_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class Homescreen extends StatefulWidget {
-  const Homescreen({super.key, required this.homescreenViewModel});
+import '../../shared/navigation/app_routes.dart';
 
-  final HomescreenViewModel homescreenViewModel;
-
-  @override
-  State<Homescreen> createState() => _HomescreenState();
-}
-
-class _HomescreenState extends State<Homescreen> {
-  @override
-  void initState() {
-    super.initState();
-    widget.homescreenViewModel.onLoadLandmarks();
-  }
+class Homescreen extends StatelessWidget {
+  const Homescreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<HomescreenViewModel>();
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.deepOrange,
-        title: const Text('Home Screen', style: TextStyle(color: Colors.white)),
+      appBar: AppBar(title: const Text('Home screen')),
+      floatingActionButton: IconButton(
+        onPressed: () async {
+          await Navigator.of(context).pushNamed(AppRoutes.create);
+          viewModel.onLoadLandmarks();
+        },
+        icon: Icon(Icons.add),
       ),
       body: ListenableBuilder(
-        listenable: widget.homescreenViewModel,
+        listenable: viewModel,
         builder: (context, child) {
-          final state = widget.homescreenViewModel.homeScreenState;
-          if (state == null) {
-            return Center(child: CircularProgressIndicator());
-          }
+          final state = viewModel.state;
           final landmarks = state.landmarks;
+          if (state.isLoading) {
+            return CircularProgressIndicator();
+          }
 
           return ListView.builder(
             itemCount: landmarks.length,
@@ -41,12 +37,18 @@ class _HomescreenState extends State<Homescreen> {
               return ListTile(
                 title: Text(landmark.name),
                 subtitle: Text(landmark.description),
-                leading: CircleAvatar(child: Text(landmark.id)),
+                leading: CircleAvatar(
+                  backgroundImage: Image.network(
+                    landmark.imageUrl,
+                    fit: BoxFit.fill,
+                  ).image,
+                ),
                 trailing: Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.of(
+                onTap: () async {
+                  await Navigator.of(
                     context,
-                  ).pushNamed('/details', arguments: landmark.id);
+                  ).pushNamed(AppRoutes.details, arguments: landmark.id);
+                  viewModel.onLoadLandmarks();
                 },
               );
             },

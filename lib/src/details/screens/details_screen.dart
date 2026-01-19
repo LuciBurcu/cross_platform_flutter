@@ -1,86 +1,97 @@
 import 'package:cross_platform_flutter/src/details/viewmodel/details_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class DetailsScreen extends StatefulWidget {
-  const DetailsScreen({super.key, required this.detailsViewModel});
-
-  final DetailsViewModel detailsViewModel;
-
-  @override
-  State<DetailsScreen> createState() => _DetailsScreenState();
-}
-
-class _DetailsScreenState extends State<DetailsScreen> {
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // We retrieve the landmark ID from the route arguments in [didChangeDependencies]
-    // because [initState] is too early in the lifecycle to access [ModalRoute].
-    // Usually this is safe because route arguments typically don't change
-    // during the lifetime of the screen.
-    final landmarkId = ModalRoute.of(context)!.settings.arguments as String;
-    widget.detailsViewModel.onLoadLandmark(landmarkId);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    widget.detailsViewModel.onDisposed();
-  }
+class DetailsScreen extends StatelessWidget {
+  const DetailsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // We use [ListenableBuilder] to rebuild the UI when the ViewModel notifies listeners
-    // when the method [notifyListeners] is called.
-    return ListenableBuilder(
-      listenable: widget.detailsViewModel,
-      builder: (innerContext, child) {
-        final state = widget.detailsViewModel.detailsScreenState;
+    final viewModel = context.watch<DetailsViewModel>();
 
-        // Conditional rendering based on whether the state is loaded or not
-        // (is/is not `null`)
-        if (state == null) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text("Loading..."),
-              backgroundColor: Colors.green,
-            ),
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        return Scaffold(
-          appBar: AppBar(
-            title: Text("Details screen for ${state.title}"),
-            backgroundColor: Colors.green,
-          ),
-          body: Column(
-            children: [
-              Text('Description about ${state.description}'),
-              FilledButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('Go back'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Are you sure you want to delete this item?'),
-                      actions: [
-                        FilledButton(onPressed: () {}, child: Text('Cancel')),
-                        FilledButton(onPressed: () {}, child: Text('Yes')),
-                      ],
+    return Scaffold(
+      appBar: AppBar(title: Text('Details screen')),
+      body: ListenableBuilder(
+        listenable: viewModel,
+        // We use _, __ for unused parameters
+        builder: (_, __) {
+          final state = viewModel.state;
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (state.imageUrl != null)
+                  Image.network(
+                    state.imageUrl!,
+                    height: 300,
+                    fit: BoxFit.cover,
+                  ),
+                const SizedBox(height: 16),
+                Text(
+                  state.title ?? 'No title',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  state.description ?? 'No description',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 24),
+                if (state.errorMessage != null)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  );
-                },
-                child: Text('Show dialog'),
-              ),
-            ],
-          ),
-        );
-      },
+                    child: Text(
+                      state.errorMessage!,
+                      style: TextStyle(color: Colors.red.shade900),
+                    ),
+                  ),
+                FilledButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: const Text(
+                          'Are you sure you want to delete this item?',
+                        ),
+                        actions: [
+                          FilledButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                            },
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            onPressed: () async {
+                              await viewModel.onDeleteLandmark();
+                              if (context.mounted) {
+                                Navigator.of(dialogContext).pop();
+                                Navigator.of(context).pop();
+                              }
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            child: const Text('Yes, Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  style: FilledButton.styleFrom(backgroundColor: Colors.red),
+                  child: const Text('Delete'),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

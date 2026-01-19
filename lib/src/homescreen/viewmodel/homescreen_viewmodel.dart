@@ -1,27 +1,36 @@
-import 'package:cross_platform_flutter/src/homescreen/models/landmark.dart';
-import 'package:cross_platform_flutter/src/homescreen/repository/landmark_repository.dart';
-import 'package:equatable/equatable.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:cross_platform_flutter/src/homescreen/viewmodel/homescreen_state.dart';
+import 'package:cross_platform_flutter/src/shared/repository/landmark_repository.dart';
+import 'package:flutter/foundation.dart';
 
+/// ViewModel for the Home Screen.
+/// See README.md for documentation on ChangeNotifier and state management patterns.
 class HomescreenViewModel extends ChangeNotifier {
   HomescreenViewModel({required this.landmarkRepository});
 
   final LandmarkRepository landmarkRepository;
 
-  HomeScreenState? homeScreenState;
+  HomeScreenState state = const HomeScreenState();
 
-  void onLoadLandmarks() async {
-    final landmarks = await landmarkRepository.getLandmarks();
-    homeScreenState = HomeScreenState(landmarks: landmarks);
+  /// Loads the list of landmarks from the repository.
+  Future<void> onLoadLandmarks() async {
+    state = state.copyWith(isLoading: true, hasError: false);
     notifyListeners();
+
+    try {
+      final landmarks = await landmarkRepository.getLandmarks();
+      state = state.copyWith(
+        isLoading: false,
+        hasError: false,
+        landmarks: landmarks,
+      );
+      notifyListeners();
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        hasError: true,
+        errorMessage: 'Failed to load landmarks: ${e.toString()}',
+      );
+      notifyListeners();
+    }
   }
-}
-
-class HomeScreenState extends Equatable {
-  const HomeScreenState({required this.landmarks});
-
-  final List<Landmark> landmarks;
-
-  @override
-  List<Object?> get props => [landmarks];
 }
